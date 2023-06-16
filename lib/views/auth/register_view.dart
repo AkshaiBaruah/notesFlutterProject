@@ -1,6 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
 
+import 'package:my_notes/constants/routes.dart';
+
+import '../../utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({Key? key}) : super(key: key);
@@ -35,6 +39,7 @@ class _RegisterViewState extends State<RegisterView> {
             keyboardType: TextInputType.emailAddress,
             enableSuggestions: false,
             autocorrect: false,
+            textCapitalization: TextCapitalization.none,
             decoration: const InputDecoration(
                 hintText: "Enter your email"
             ),
@@ -60,17 +65,18 @@ class _RegisterViewState extends State<RegisterView> {
                     email: email,
                     password: pass,
                   );
-                  if(credential.user?.emailVerified == false){
-                    Navigator.of(context).pushNamedAndRemoveUntil('/verifyemail/', (route) => false);
-                  }
+                  //we can directly go to verify screen as a newly registered user won't be verified
+                  Navigator.of(context).pushNamed(verifyEmailRoute);
                 } on FirebaseAuthException catch (e) {
-                  exceptionActions(e.code);
+                  devtools.log(e.toString());
+                  await showErrorDialog(context,e.code);
                 } catch (e) {
-                  print(e);
+                  devtools.log(e.toString());
+                  await showErrorDialog(context, e.toString());
                 }
               },
               child: const Text(
-                "Register Button",
+                "Register",
                 style: TextStyle(
                     color: Colors.black
                 ),
@@ -79,7 +85,7 @@ class _RegisterViewState extends State<RegisterView> {
           ),
           TextButton(
               onPressed : (){
-                Navigator.of(context).pushNamedAndRemoveUntil('/login/', (route) => false);
+                Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
               },
               child: const Text("Already a User? Login")),
         ],
@@ -88,10 +94,3 @@ class _RegisterViewState extends State<RegisterView> {
   }
 }
 
-void exceptionActions(String code){
-  if (code == 'weak-password') {
-    print('The password provided is too weak, Please Provide a password of at least 6-characters.');
-  } else if (code == 'email-already-in-use') {
-    print('The account already exists for that email.');
-  }
-}

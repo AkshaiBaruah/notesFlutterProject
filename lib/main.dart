@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_notes/constants/routes.dart';
 import 'package:my_notes/views/auth/login_view.dart';
 import 'package:my_notes/views/auth/register_view.dart';
 import 'package:my_notes/views/auth/verify_email_view.dart';
@@ -7,7 +8,7 @@ import 'package:my_notes/views/notes_view.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'dart:developer' as devtools show log;
 void main() async {
   //create an instance of widgetbinding because firebase initializeapp need to run native code and widgetbining can use the native code
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +16,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -29,13 +30,13 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.brown
         ,
       ),
-      home:  Homepage(),
+      home:  const Homepage(),
 
       routes: {
-        '/login/' : (context) => const LoginView(),
-        '/register/' : (context) => const RegisterView(),
-        '/verifyemail/' : (context) => const VerifyEmailView(),
-        '/notes/' : (context) => const NotesView(),
+        loginRoute : (context) => const LoginView(),
+        registerRoute : (context) => const RegisterView(),
+        verifyEmailRoute : (context) => const VerifyEmailView(),
+        notesRoute : (context) => const NotesView(),
       },
     );
   }
@@ -46,16 +47,16 @@ class Homepage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    print(user);
+    devtools.log(user.toString());
     if(user == null){
-      return RegisterView();
+      return const RegisterView();
     }
     else{
       if(user.emailVerified){
-        return NotesView();
+        return const NotesView();
       }
       else{
-        return LoginView();
+        return const LoginView();
       }
     }
   }
