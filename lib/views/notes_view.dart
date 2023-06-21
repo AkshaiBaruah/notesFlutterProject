@@ -1,7 +1,10 @@
-
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:my_notes/services/auth/auth_service.dart';
+import 'package:my_notes/utilities/show_error_dialog.dart';
+import '../../services/auth/auth_exceptions.dart';
 import 'dart:developer' as devtools show log;
+
+import '../enums/menu_actions.dart';
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
 
@@ -22,12 +25,14 @@ class _NotesViewState extends State<NotesView> {
                   final logoutval = await showLogoutDialog(context);
                   if(logoutval){
                     try{
-                      await FirebaseAuth.instance.signOut();
+                      await AuthService.fromFirebase().logOut();
                       Navigator.of(context).pushNamedAndRemoveUntil('/login/', (route) => false);
-
-                    } on FirebaseAuthException catch(e){
-                      devtools.log(e.code);
+                    } on UserNotLoggedInAuthException
+                    {
+                       await showErrorDialog(context, 'User not logged in');
                     }
+
+
                   }
                 }
                 else if(value == MenuAction.settings) {
@@ -76,4 +81,3 @@ Future<bool> showLogoutDialog(BuildContext context){
       },
   ).then((value) => value ?? false);
 }
-enum MenuAction{ logout , settings }

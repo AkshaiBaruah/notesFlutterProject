@@ -1,9 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
-
 import 'package:my_notes/constants/routes.dart';
-
+import 'package:my_notes/services/auth/auth_service.dart';
+import '../../services/auth/auth_exceptions.dart';
 import '../../utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
@@ -61,18 +61,18 @@ class _RegisterViewState extends State<RegisterView> {
                 final email = _email.text;
                 final pass = _pass.text;
                 try {
-                  final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                    email: email,
-                    password: pass,
-                  );
+                  final user = await AuthService.fromFirebase().createUser(email: email, password: pass);
+                  devtools.log(user.toString());
                   //we can directly go to verify screen as a newly registered user won't be verified
                   Navigator.of(context).pushNamed(verifyEmailRoute);
-                } on FirebaseAuthException catch (e) {
-                  devtools.log(e.toString());
-                  await showErrorDialog(context,e.code);
-                } catch (e) {
-                  devtools.log(e.toString());
-                  await showErrorDialog(context, e.toString());
+                }on InvalidEmailAuthException{
+                  await showErrorDialog(context, 'Invalid Email');
+                } on WeakPasswordAuthException{
+                  await showErrorDialog(context, 'Please use a password of length more than 6 characters');
+                } on EmailAlreadyInUseAuthException{
+                  await showErrorDialog(context, 'Email is already in use');
+                } on GenericAuthException{
+                  await showErrorDialog(context, 'Authentication Error, please try again');
                 }
               },
               child: const Text(

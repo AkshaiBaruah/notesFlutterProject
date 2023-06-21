@@ -1,21 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:my_notes/constants/routes.dart';
+import 'package:my_notes/services/auth/auth_service.dart';
 import 'package:my_notes/views/auth/login_view.dart';
 import 'package:my_notes/views/auth/register_view.dart';
 import 'package:my_notes/views/auth/verify_email_view.dart';
 import 'package:my_notes/views/notes_view.dart';
-
-import 'firebase_options.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as devtools show log;
 void main() async {
   //create an instance of widgetbinding because firebase initializeapp need to run native code and widgetbining can use the native code
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
+  await AuthService.fromFirebase().initialize();
   runApp(const MyApp());
 }
 class MyApp extends StatelessWidget {
@@ -46,13 +40,13 @@ class Homepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = AuthService.fromFirebase().currentUser;
     devtools.log(user.toString());
     if(user == null){
       return const RegisterView();
     }
     else{
-      if(user.emailVerified){
+      if(user.isEmailVerified){
         return const NotesView();
       }
       else{

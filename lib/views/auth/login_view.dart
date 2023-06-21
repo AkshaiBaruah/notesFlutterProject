@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 //firebase
-import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:my_notes/constants/routes.dart';
-
+import 'package:my_notes/services/auth/auth_service.dart';
+import '../../services/auth/auth_exceptions.dart';
 import '../../utilities/show_error_dialog.dart';
 
 
@@ -62,21 +62,20 @@ class _LoginViewState extends State<LoginView> {
                 final email = _email.text;
                 final pass = _pass.text;
                 try {
-                  final credential = await FirebaseAuth.instance.signInWithEmailAndPassword(
-                      email: email,
-                      password: pass
-                  );
-                  if(credential.user != null && credential.user?.emailVerified == false){
+                  await AuthService.fromFirebase().logIn(email: email, password: pass);
+                  final user = AuthService.fromFirebase().currentUser;
+                  if(user != null && user.isEmailVerified == false){
                     Navigator.of(context).pushNamed(verifyEmailRoute);
                   }
-                  else if(credential.user?.emailVerified ?? false){
+                  else if(user?.isEmailVerified ?? false){
                     Navigator.of(context).pushNamedAndRemoveUntil(notesRoute, (route) => false);
                   }
-                } on FirebaseAuthException catch (e)  {
-                  devtools.log('Firebase auth exception occured');
-                  await showErrorDialog(context, e.code);
-                } catch (e){
-                  await showErrorDialog(context, e.toString());
+                } on UserNotFoundAuthException {
+                    await showErrorDialog(context, 'User Not Found');
+                } on WrongPasswordAuthException{
+                    await showErrorDialog(context, 'Wrong Credentials');
+                } on GenericAuthException{
+                  await showErrorDialog(context, 'Authentication Error');
                 }
               },
               child: const Text(
@@ -98,21 +97,8 @@ class _LoginViewState extends State<LoginView> {
   }
 }
 
-Future<void> showLoginErrorDialog(BuildContext context , String text,){
-  return showDialog(
-      context: context,
-      builder: (context){
-        return AlertDialog(
-          title: const Text('Oops! An error occured'),
-          content: Text(text),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: const Text('OK'))
-          ],
-        );
-      }
-  );
-}
+
+
+
+// new 100 lines of code
+//......
