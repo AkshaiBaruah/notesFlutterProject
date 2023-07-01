@@ -53,15 +53,23 @@ class NoteService{
   Database? _db;
 
   //singleton for making a single instance (sharedinstance of NotesService)
-
   static final _shared = NoteService._sharedInstance();     //the shared instance of notes
-  NoteService._sharedInstance();                            //constructor
+  NoteService._sharedInstance(){                             //constructor
+    _notesStreamController = StreamController<List<DatabaseNote>>.broadcast(
+      onListen: (){
+        _notesStreamController.sink.add(_notes);
+      },
+    );
+  }
   factory NoteService() => _shared;                         //factory constructor that returns the shared single instance of NoteService
 
   List<DatabaseNote> _notes = [];            //final source of truth of the notes that the service talks to
-  final _notesStreamController = StreamController<List<DatabaseNote>>.broadcast();
+  late final StreamController<List<DatabaseNote>> _notesStreamController ;
 
   Stream<List<DatabaseNote>> get allNotes => _notesStreamController.stream;
+
+
+  //methods
 
   Future<void> _cacheNotes() async {
     List<DatabaseNote> allNotes = await getAllNotes();
@@ -77,7 +85,7 @@ class NoteService{
       throw DatabaseNotOpenException();
     }
   }
-
+  // we will ensure db is open in all functions
   Future<void> open() async {
     if(_db != null){
       throw DatabaseAlreadyOpenException();
@@ -104,7 +112,16 @@ class NoteService{
     }
   }
 
+  Future<void> ensureDbOpen() async {
+    try{
+      await open();
+    } on DatabaseAlreadyOpenException{
+      //do nothing
+    }
+  }
+
   Future<DatabaseUser> getOrCreateUser({required String email}) async {
+    await ensureDbOpen();
     try{
       final dbUser = await getUser(email: email);
       return dbUser;
@@ -117,6 +134,7 @@ class NoteService{
   }
 
   Future<void> deleteUser({required String email}) async {
+    await ensureDbOpen();
     final db = instance;
     final delcnt = await db.delete(
         userTable ,
@@ -129,6 +147,7 @@ class NoteService{
   }
 
   Future<DatabaseUser> createUser({required String email}) async {
+    await ensureDbOpen();
     final db = instance;
     final result = await db.query(
         userTable ,
@@ -147,6 +166,7 @@ class NoteService{
   }
 
   Future<DatabaseUser> getUser({required String email}) async {
+    await ensureDbOpen();
     final db = instance;
     final result = await db.query(
         userTable ,
@@ -159,11 +179,10 @@ class NoteService{
     }else{
       return DatabaseUser.fromRow(result.first);
     }
-
-
   }
 
   Future<DatabaseNote> insertNote({required DatabaseUser user}) async {
+    await ensureDbOpen();
     final db = instance;
     final dbUser = await getUser(email: user.email);
     if(user != dbUser){
@@ -181,6 +200,7 @@ class NoteService{
   }
 
   Future<void> deleteNote({required int noteId}) async {
+    await ensureDbOpen();
     final db = instance;
 
     final delcnt = await db.delete(
@@ -197,6 +217,7 @@ class NoteService{
   }
 
   Future<int> deleteAllNotes()async{
+    await ensureDbOpen();
     final db = instance;
     final delcnt = await db.delete(noteTable);
     _notes.clear();
@@ -205,6 +226,7 @@ class NoteService{
   }
   //gets the node with given id and also updates in the cache
   Future<DatabaseNote> getNote({required int noteId})async {
+    await ensureDbOpen();
     final db = instance;
     final result = await db.query(
       noteTable,
@@ -224,6 +246,7 @@ class NoteService{
   }
 
   Future<List<DatabaseNote>> getAllNotes() async {
+    await ensureDbOpen();
     final db = instance;
     final result = await db.query(noteTable);
     List<DatabaseNote> notes = [];
@@ -233,7 +256,8 @@ class NoteService{
     return notes;
   }
 
-  Future<DatabaseNote> updataNote({required DatabaseNote note , required String newText})async {
+  Future<DatabaseNote> updataNote({required DatabaseNote note ,  String newText = ''})async {
+    await ensureDbOpen();
     final db = instance;
     //will work else CouldNotFindNoteException
     await getNote(noteId: note.id); //this will throw an excecption if note with the given id is not present
@@ -265,13 +289,13 @@ const dbName = 'notes.db';
 const noteTable = 'note';
 const userTable = 'user';
 const createUserTable = '''
-        CREATE TABLE IF NOT EXIST "user" (
+        CREATE TABLE IF NOT EXISTS "user" (
 	      "id"	INTEGER NOT NULL,
 	      "email"	TEXT NOT NULL,
 	      PRIMARY KEY("id" AUTOINCREMENT)
       );''';
 const createNoteTable = '''
-      CREATE TABLE IF NOT EXIST "note" (
+      CREATE TABLE IF NOT EXISTS "note" (
 	    "id"	INTEGER NOT NULL,
 	    "user_id"	INTEGER NOT NULL,
 	    "text"	TEXT,

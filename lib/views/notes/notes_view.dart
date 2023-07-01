@@ -21,12 +21,9 @@ class _NotesViewState extends State<NotesView> {
   @override
   void initState() {
     _noteService = NoteService();
-    _noteService.open();
+    super.initState();
   }
-  @override
-  void dispose() {
-    _noteService.close();
-  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,9 +76,39 @@ class _NotesViewState extends State<NotesView> {
                       switch(snapshot.connectionState){
 
                         case ConnectionState.waiting:
-                          return const Text('waiting for all notes');
+                        case ConnectionState.active:
+                          if(snapshot.hasData){
+                            final allNotes = snapshot.data;
+                            return Padding(
+                              padding: const EdgeInsets.only(top: 16.0),
+                              child: ListView.builder(
+                                  itemCount : allNotes!.length,
+                                  itemBuilder: (context , index){
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 16.0),
+                                      child: ListTile(
+                                        title:  Text(
+                                            allNotes[index].text,
+                                            maxLines: 1,
+                                            softWrap: true,
+                                            overflow: TextOverflow.ellipsis,
+                                        ),
+                                        shape:  RoundedRectangleBorder(
+                                          side: BorderSide(color: Colors.black , width: 0.3),
+                                          borderRadius: BorderRadius.circular(10),
+                                        ),
+
+                                      ),
+
+                                    );
+                                  },
+                              ),
+                            );
+                          }else{
+                            return const CircularProgressIndicator();
+                          }
                         default :
-                          return CircularProgressIndicator();
+                          return const CircularProgressIndicator();
                       }
                     }
                 );

@@ -20,8 +20,7 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
     }
     final userEmail = AuthService.fromFirebase().currentUser!.email!;
     final user = await _noteService.getUser(email: userEmail);
-    _note = await _noteService.insertNote(user: user);
-    return _note!;
+    return await _noteService.insertNote(user: user);
   }
   void _deleteNoteOnEmptyText() async {
     final note = _note;
@@ -72,7 +71,7 @@ class _AddNewNoteViewState extends State<AddNewNoteView> {
         builder: (context , snapshot){
           switch(snapshot.connectionState){
             case ConnectionState.done:
-              _note = snapshot.data as DatabaseNote?;
+              _note = snapshot.data;
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: TextField(
