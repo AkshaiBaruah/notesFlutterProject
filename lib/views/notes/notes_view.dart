@@ -80,7 +80,7 @@ class _NotesViewState extends State<NotesView> {
                           if(snapshot.hasData){
                             final allNotes = snapshot.data;
                             return Padding(
-                              padding: const EdgeInsets.only(top: 16.0),
+                              padding: const EdgeInsets.only(top: 16.0 , bottom: 20),
                               child: ListView.builder(
                                   itemCount : allNotes!.length,
                                   itemBuilder: (context , index){
