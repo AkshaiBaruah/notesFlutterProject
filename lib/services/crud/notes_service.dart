@@ -53,6 +53,7 @@ class NoteService{
   Database? _db;
 
   //singleton for making a single instance (sharedinstance of NotesService)
+
   static final _shared = NoteService._sharedInstance();     //the shared instance of notes
   NoteService._sharedInstance();                            //constructor
   factory NoteService() => _shared;                         //factory constructor that returns the shared single instance of NoteService
