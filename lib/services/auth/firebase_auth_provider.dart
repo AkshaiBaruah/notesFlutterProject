@@ -8,7 +8,7 @@ import '../../firebase_options.dart';
 class FirebaseAuthProvider implements AuthProvider{
 
   @override
-  Future<void> initialize() async {
+  Future<void> initialize() async {                           //we only call this once
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
