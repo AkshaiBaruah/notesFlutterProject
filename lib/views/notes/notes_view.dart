@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:my_notes/constants/routes.dart';
 import 'package:my_notes/services/auth/auth_service.dart';
 import 'package:my_notes/services/crud/notes_service.dart';
-import 'package:my_notes/utilities/show_error_dialog.dart';
+import 'package:my_notes/views/notes/notes_list_view.dart';
 import '../../../services/auth/auth_exceptions.dart';
 import 'dart:developer' as devtools show log;
 
 import '../../enums/menu_actions.dart';
+import '../../utilities/Dialogs/error_dialog.dart';
+import '../../utilities/Dialogs/logout_dialog.dart';
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
 
@@ -42,8 +44,6 @@ class _NotesViewState extends State<NotesView> {
                     {
                        await showErrorDialog(context, 'User not logged in');
                     }
-
-
                   }
                 }
                 else if(value == MenuAction.settings) {
@@ -79,30 +79,14 @@ class _NotesViewState extends State<NotesView> {
                         case ConnectionState.active:
                           if(snapshot.hasData){
                             final allNotes = snapshot.data;
-                            return Padding(
-                              padding: const EdgeInsets.only(top: 16.0 , bottom: 20),
-                              child: ListView.builder(
-                                  itemCount : allNotes!.length,
-                                  itemBuilder: (context , index){
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 16.0),
-                                      child: ListTile(
-                                        title:  Text(
-                                            allNotes[index].text,
-                                            maxLines: 1,
-                                            softWrap: true,
-                                            overflow: TextOverflow.ellipsis,
-                                        ),
-                                        shape:  RoundedRectangleBorder(
-                                          side: BorderSide(color: Colors.black , width: 0.3),
-                                          borderRadius: BorderRadius.circular(10),
-                                        ),
-
-                                      ),
-
-                                    );
-                                  },
-                              ),
+                            return NoteListView(
+                                notes: allNotes!,
+                                onDelete: (note) async{
+                                  await _noteService.deleteNote(noteId: note.id);
+                                },
+                                onTap: (note) async{
+                                  Navigator.of(context).pushNamed(editNoteRoute , arguments: note);
+                                },
                             );
                           }else{
                             return const CircularProgressIndicator();
@@ -119,7 +103,7 @@ class _NotesViewState extends State<NotesView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.of(context).pushNamed(addNewNoteRoute);
+          Navigator.of(context).pushNamed(editNoteRoute);
         },
         child: const Icon(Icons.add, color: Colors.tealAccent,),
         enableFeedback: true,
@@ -128,28 +112,4 @@ class _NotesViewState extends State<NotesView> {
       ),
     );
   }
-}
-
-Future<bool> showLogoutDialog(BuildContext context){
-  return showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Log Out'),
-          content: const Text('Are you sure you want to logout?'),
-          actions: [
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(true);
-                },
-                child: const Text('Logout')),
-            TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop(false);
-                },
-                child: const Text('Cancel')),
-          ],
-        );
-      },
-  ).then((value) => value ?? false);
 }
