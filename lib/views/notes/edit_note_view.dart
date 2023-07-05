@@ -38,14 +38,14 @@ class _EditNoteViewState extends State<EditNoteView> {
   void _saveNoteWithText() async {
     final note = _note;
     if(note != null && _noteTextController.text.isNotEmpty){
-      await _noteService.updataNote(note: note, newText: _noteTextController.text);
+      await _noteService.updateNote(note: note, newText: _noteTextController.text);
     }
   }
   void _noteTextListenner() async {
     final note = _note;
     if(note == null)  return;
     final newText = _noteTextController.text;
-    _note = await _noteService.updataNote(note: note, newText: newText);
+    _note = await _noteService.updateNote(note: note, newText: newText);
   }
   void setControllerListener(){
     _noteTextController.removeListener(_noteTextListenner);

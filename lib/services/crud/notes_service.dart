@@ -51,6 +51,7 @@ class DatabaseNote{
 
 class NoteService{
   Database? _db;
+  DatabaseUser? user;
 
   //singleton for making a single instance (sharedinstance of NotesService)
   static final _shared = NoteService._sharedInstance();     //the shared instance of notes
@@ -97,7 +98,6 @@ class NoteService{
 
       await _db?.execute(createUserTable);
       await _db?.execute(createNoteTable);
-      await _cacheNotes();
     } on MissingPlatformDirectoryException {
       throw DocsDirectoryNotFoundException();
     }
@@ -120,14 +120,22 @@ class NoteService{
     }
   }
 
-  Future<DatabaseUser> getOrCreateUser({required String email}) async {
+  Future<DatabaseUser> getOrCreateUser({required String email , bool setCurrUser = true}) async {
     await ensureDbOpen();
     try{
       final dbUser = await getUser(email: email);
+      if(setCurrUser){
+        user = dbUser;
+      }
+      await _cacheNotes();
       return dbUser;
     } on UserDoesNotExistException {
-      final user = await createUser(email: email);
-      return user;
+      final dbUser = await createUser(email: email);
+      if(setCurrUser){
+        user = dbUser;
+      }
+      await _cacheNotes();
+      return dbUser;
     } catch(e){
       rethrow;
     }
@@ -246,9 +254,20 @@ class NoteService{
   }
 
   Future<List<DatabaseNote>> getAllNotes() async {
+    if(user == null) throw NoUserFoundException;
     await ensureDbOpen();
     final db = instance;
-    final result = await db.query(noteTable);
+    final dbUser = await db.query(userTable ,
+        limit: 1 ,
+        where: 'email = ?' ,
+        whereArgs: [user!.email]
+    );
+    final user_id = dbUser.first['id'] as int;
+    final result = await db.query(
+        noteTable ,
+        where: 'user_id = ?',
+        whereArgs: [user_id],
+    );
     List<DatabaseNote> notes = [];
     for(int i = 0 ; i<result.length ; i++){
       notes.add(DatabaseNote.fromRow(result[i]));
@@ -256,7 +275,7 @@ class NoteService{
     return notes;
   }
 
-  Future<DatabaseNote> updataNote({required DatabaseNote note ,  String newText = ''})async {
+  Future<DatabaseNote> updateNote({required DatabaseNote note ,  String newText = ''})async {
     await ensureDbOpen();
     final db = instance;
     //will work else CouldNotFindNoteException

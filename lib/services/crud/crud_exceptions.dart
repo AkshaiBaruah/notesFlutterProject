@@ -7,3 +7,4 @@ class UserDoesNotExistException implements Exception {}
 class CouldNotDeleteNoteException implements Exception {}
 class CouldNotFindNoteException implements Exception {}
 class CouldNotUpdateNoteException implements Exception {}
+class NoUserFoundException implements Exception {}
