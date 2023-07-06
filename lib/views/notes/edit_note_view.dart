@@ -24,7 +24,7 @@ class _EditNoteViewState extends State<EditNoteView> {
     if(_note != null){
       return _note!;
     }
-    final userEmail = AuthService.fromFirebase().currentUser!.email!;
+    final userEmail = AuthService.fromFirebase().currentUser!.email;
     final user = await _noteService.getUser(email: userEmail);
     _note = await _noteService.insertNote(user: user);
     return _note!;

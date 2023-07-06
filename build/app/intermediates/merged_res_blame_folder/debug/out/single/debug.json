@@ -4,10 +4,6 @@
         "source": "com.example.my_notes.app-main-1:/mipmap-mdpi/ic_launcher.png"
     },
     {
-        "merged": "com.example.my_notes.app-merged_res-7:/drawable_launch_background.xml.flat",
-        "source": "com.example.my_notes.app-main-1:/drawable/launch_background.xml"
-    },
-    {
         "merged": "com.example.my_notes.app-merged_res-7:/mipmap-hdpi_ic_launcher.png.flat",
         "source": "com.example.my_notes.app-main-1:/mipmap-hdpi/ic_launcher.png"
     },
