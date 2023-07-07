@@ -10,41 +10,44 @@ class CloudService{
   
   final _notes = FirebaseFirestore.instance.collection('notes');
 
-  void createNote({required String userId}) async{
+  Future<CloudNote> createNote({required String userId}) async{
     try{
-      await _notes.add({
-        'user_ud' : userId,
+      final doc = await _notes.add({
+        'user_id' : userId,
         'text' : '',
       });
+      final fetchedNote = await doc.get();
+      return CloudNote(
+          docId: fetchedNote.id,
+          userId: userId,
+          text: ''
+      );
     } catch (e){
       throw CouldNotCreateNoteException();
     }
   }
 
-  Future<List<CloudNote>> getAllNotes({required userId}) async{
+  Future<Iterable<CloudNote>> getAllNotes({required userId}) async{
     try {
       return await _notes.where(
           'user_id ',
           isEqualTo: userId
       ).get()
       .then((value) => value.docs.map((doc) {
-        return CloudNote(
-            docId: doc.id,
-            userId: doc.data()['user_id'],
-            text: doc.id
-        );
+        return CloudNote.fromSnapshot(doc);
       }
-      ).toList()
+      )
       );
     } catch (e) {
       throw CouldNotGetNotesException();
     }
   }
 
-  Stream<List<CloudNote>> allNotes({required userId}){
-    return _notes.snapshots().map((event) => event.docs.map((doc) {
-      return CloudNote(docId: doc.id, userId: doc.data()['user_id'], text: doc.data()['text']);
-    }).toList());
+  Stream<Iterable<CloudNote>> allNotes({required userId}){
+    return _notes.snapshots().map((event) => event.docs
+        .map((doc) {
+      return CloudNote.fromSnapshot(doc);
+    }).where((note) => note.userId == userId));
   }
 
   Future<void> updateNote({
@@ -60,7 +63,7 @@ class CloudService{
   }
   Future<void> deleteNote({
     required docId,
-}) async {
+  }) async {
     try{
       await _notes.doc(docId).delete();
     } catch(_){

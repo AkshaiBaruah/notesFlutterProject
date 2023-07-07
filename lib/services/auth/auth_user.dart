@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class AuthUser{
-  final String id;
+  final String id;                      //id that is stored in firebase
   final String email;
   final bool isEmailVerified;
 

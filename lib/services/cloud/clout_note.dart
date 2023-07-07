@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CloudNote{
@@ -6,14 +5,14 @@ class CloudNote{
   final String userId;
   final String text;
 
-  CloudNote({
+  const CloudNote({
     required this.docId,
     required this.userId,
     required this.text,
  });
-  CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, Object?>> snapshot)
+  CloudNote.fromSnapshot(QueryDocumentSnapshot<Map<String, dynamic>> snapshot)
     : docId = snapshot.id,
-      userId = snapshot.data()['user_id'] as String,
+      userId = snapshot.data()['user_id'],
       text = snapshot.data()['text'] as String;
 
 }
