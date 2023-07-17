@@ -3,6 +3,7 @@ import 'package:my_notes/services/auth/auth_service.dart';
 import 'package:my_notes/services/cloud/cloud_service.dart';
 import 'package:my_notes/services/cloud/clout_note.dart';
 import 'package:my_notes/utilities/generics/context_args.dart';
+import 'package:share_plus/share_plus.dart';
 
 class EditNoteView extends StatefulWidget {
   const EditNoteView({Key? key}) : super(key: key);
@@ -34,10 +35,10 @@ class _EditNoteViewState extends State<EditNoteView> {
     _note = newnote;
     return newnote;
   }
-  void _deleteNoteOnEmptyText()  {
+  void _deleteNoteOnEmptyText()  async {
     final note = _note;
     if(note != null && _noteTextController.text.isEmpty ){
-       _noteService.deleteNote(docId: note.docId);
+       await _noteService.deleteNote(docId: note.docId);
     }
   }
   void _saveNoteWithText() async {
@@ -82,7 +83,23 @@ class _EditNoteViewState extends State<EditNoteView> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Note'),
-
+        actions: [
+          IconButton(
+              onPressed: () {
+                final text = _noteTextController.text;
+                if(_note == null || text.isEmpty){
+                  const snackBar = SnackBar(
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 2),
+                    content: Text('You cannot share an empty note!'),
+                  );
+                  ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                }else{
+                  Share.share(text);
+                }
+              },
+              icon: Icon(Icons.share))
+        ],
       ),
       body: FutureBuilder(
         future: editNote(context),
