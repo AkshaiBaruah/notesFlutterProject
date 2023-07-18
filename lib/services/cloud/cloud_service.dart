@@ -30,7 +30,7 @@ class CloudService{
   Future<Iterable<CloudNote>> getAllNotes({required userId}) async{
     try {
       return await _notes.where(
-          'user_id ',
+          'user_id',
           isEqualTo: userId
       ).get()
       .then((value) => value.docs.map((doc) {
@@ -62,7 +62,7 @@ class CloudService{
 
   }
   Future<void> deleteNote({
-    required docId,
+    required String docId,
   }) async {
     try{
       await _notes.doc(docId).delete();
@@ -70,5 +70,12 @@ class CloudService{
       throw CouldNotDeleteNoteException();
     }
 
+  }
+
+  Future<void> deleteAllNotes({required String userId}) async {
+    final allnotes = await getAllNotes(userId: userId);
+    for(final cloudNote in allnotes){
+      await deleteNote(docId: cloudNote.docId);
+    }
   }
 }

@@ -1,9 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools show log;
-import 'package:my_notes/constants/routes.dart';
-import 'package:my_notes/services/auth/auth_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:my_notes/services/bloc/auth_events.dart';
+import 'package:my_notes/services/bloc/auth_states.dart';
 import '../../services/auth/auth_exceptions.dart';
+import '../../services/bloc/auth_bloc.dart';
 import '../../utilities/Dialogs/error_dialog.dart';
 
 
@@ -31,65 +32,82 @@ class _RegisterViewState extends State<RegisterView> {
   }
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text("Register Screen"),),
-      body: Column(
-        children: [
-          TextField(
-            controller: _email,
-            keyboardType: TextInputType.emailAddress,
-            enableSuggestions: false,
-            autocorrect: false,
-            textCapitalization: TextCapitalization.none,
-            decoration: const InputDecoration(
-                hintText: "Enter your email"
-            ),
-          ),
-          TextField(
-            controller: _pass,
-            obscureText: true,
-            enableSuggestions: false,
-            autocorrect: false,
-            decoration: const InputDecoration(
-              hintText: "Enter your password",
-              hintStyle: TextStyle(
+    return BlocConsumer<AuthBloc , AuthState>(        //listener of the register screen to listen to changes
+      listener: (context , state){
+        if(state is AuthStateRegisterScreen){
+          if(state.isLoading == true){
 
+          }
+          final exception = state.exception;
+          if (exception is InvalidEmailAuthException){
+            showErrorDialog(context, 'Invalid Email');
+          }else if(exception is WeakPasswordAuthException){
+            showErrorDialog(context, 'Please Use a strong password of 6 characters.');
+          }else if(exception is EmailAlreadyInUseAuthException){
+              showErrorDialog(context, 'Email is already in use.');
+          }
+          else if(exception is GenericAuthException){
+            showErrorDialog(context, 'Authentication Error');
+          }
+
+        }
+      },
+
+      builder:(context , state) => Scaffold(
+        appBar: AppBar(title: const Text("Register Screen"),),
+        body: Column(
+          children: [
+            TextField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              enableSuggestions: false,
+              autocorrect: false,
+              textCapitalization: TextCapitalization.none,
+              decoration: const InputDecoration(
+                  hintText: "Enter your email"
               ),
             ),
-          ),
-          TextButton(
-              onPressed: () async {
-                final email = _email.text;
-                final pass = _pass.text;
-                try {
-                  final user = await AuthService.fromFirebase().createUser(email: email, password: pass);
-                  devtools.log(user.toString());
-                  //we can directly go to verify screen as a newly registered user won't be verified
-                  Navigator.of(context).pushNamed(verifyEmailRoute);
-                }on InvalidEmailAuthException{
-                  await showErrorDialog(context, 'Invalid Email');
-                } on WeakPasswordAuthException{
-                  await showErrorDialog(context, 'Please use a password of length more than 6 characters');
-                } on EmailAlreadyInUseAuthException{
-                  await showErrorDialog(context, 'Email is already in use');
-                } on GenericAuthException{
-                  await showErrorDialog(context, 'Authentication Error, please try again');
-                }
-              },
-              child: const Text(
-                "Register",
-                style: TextStyle(
-                    color: Colors.black
+            TextField(
+              controller: _pass,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+              decoration: const InputDecoration(
+                hintText: "Enter your password",
+                hintStyle: TextStyle(
+
                 ),
-                textScaleFactor: 2,
-              )
-          ),
-          TextButton(
-              onPressed : (){
-                Navigator.of(context).pushNamedAndRemoveUntil(loginRoute, (route) => false);
-              },
-              child: const Text("Already a User? Login")),
-        ],
+              ),
+            ),
+            TextButton(
+                onPressed: () async {
+                  final email = _email.text;
+                  final pass = _pass.text;
+                  context.read<AuthBloc>().add(AuthEventRegister(email: email, password: pass));
+
+                },
+                child: const Text(
+                  "Register",
+                  style: TextStyle(
+                      color: Colors.black
+                  ),
+                  textScaleFactor: 2,
+                )
+            ),
+            TextButton(
+                onPressed : (){
+                  context.read<AuthBloc>().add(AuthEventLogOut());
+                },
+                child: const Text("Already a User? Login")
+            ),
+            Center(
+              child: Visibility(
+                visible: (state as AuthStateRegisterScreen).isLoading,
+                child:const  CircularProgressIndicator(color: Colors.black45,),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

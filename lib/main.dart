@@ -36,10 +36,6 @@ class MyApp extends StatelessWidget {
       ),
 
       routes: {
-        loginRoute : (context) => const LoginView(),
-        registerRoute : (context) => const RegisterView(),
-        verifyEmailRoute : (context) => const VerifyEmailView(),
-        notesRoute : (context) => const NotesView(),
         editNoteRoute : (context) => const EditNoteView(),
       },
     );
@@ -53,16 +49,19 @@ class Homepage extends StatelessWidget {
     context.read<AuthBloc>().add(const AuthEventInitialize());                //we are adding this event at the beginning
     return BlocBuilder<AuthBloc , AuthState>(builder: (context , state) {
       if(state is AuthStateLoggedIn){
-        return NotesView();
+        return const NotesView();
       }
       else if(state is AuthStateEmailNotVerified){
-        return VerifyEmailView();
+        return const VerifyEmailView();
       }
       else if(state is AuthStateLoggedOut){
-        return LoginView();
+        return const LoginView();
+      }
+      else if(state is AuthStateRegisterScreen){
+        return const RegisterView();
       }
       else {
-        return CircularProgressIndicator();
+        return const Center(child:CircularProgressIndicator());
       }
     });
 

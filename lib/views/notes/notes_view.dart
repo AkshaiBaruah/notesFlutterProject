@@ -5,6 +5,7 @@ import 'package:my_notes/services/auth/auth_service.dart';
 import 'package:my_notes/services/bloc/auth_events.dart';
 import 'package:my_notes/services/cloud/cloud_service.dart';
 import 'package:my_notes/services/cloud/clout_note.dart';
+import 'package:my_notes/utilities/Dialogs/delete_dialog.dart';
 import 'package:my_notes/views/notes/notes_list_view.dart';
 import '../../../services/auth/auth_exceptions.dart';
 import 'dart:developer' as devtools show log;
@@ -22,7 +23,7 @@ class NotesView extends StatefulWidget {
 
 class _NotesViewState extends State<NotesView> {
   late final CloudService _noteService;
-  String get userId => AuthService.fromFirebase().currentUser!.id;
+  String get userId => AuthService.fromFirebase().currentUser!.id;            //if we are in this view we are sure user exists
 
   @override
   void initState() {
@@ -50,6 +51,12 @@ class _NotesViewState extends State<NotesView> {
                     }
                   }
                 }
+                else if(value == MenuAction.deleteAll){
+                  final deleteVal = await showDeleteAllDialog(context);
+                  if(deleteVal){
+                    await _noteService.deleteAllNotes(userId: userId);
+                  }
+                }
                 else if(value == MenuAction.settings) {
                   devtools.log(value.toString());
                 }
@@ -64,6 +71,10 @@ class _NotesViewState extends State<NotesView> {
                       value : MenuAction.settings,
                       child: Text('Settings')
                   ),
+                  PopupMenuItem<MenuAction>(
+                      value : MenuAction.deleteAll,
+                      child: Text('Delete All',style: TextStyle(color: Colors.red),)
+                  )
                 ];
               }
           ),
