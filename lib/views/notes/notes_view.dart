@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:my_notes/constants/routes.dart';
 import 'package:my_notes/services/auth/auth_service.dart';
+import 'package:my_notes/services/bloc/auth_events.dart';
 import 'package:my_notes/services/cloud/cloud_service.dart';
 import 'package:my_notes/services/cloud/clout_note.dart';
 import 'package:my_notes/views/notes/notes_list_view.dart';
 import '../../../services/auth/auth_exceptions.dart';
 import 'dart:developer' as devtools show log;
 import '../../enums/menu_actions.dart';
+import '../../services/bloc/auth_bloc.dart';
 import '../../utilities/Dialogs/error_dialog.dart';
 import '../../utilities/Dialogs/logout_dialog.dart';
 
@@ -40,8 +43,7 @@ class _NotesViewState extends State<NotesView> {
                   final logoutval = await showLogoutDialog(context);
                   if(logoutval){
                     try{
-                      await AuthService.fromFirebase().logOut();
-                      Navigator.of(context).pushNamedAndRemoveUntil('/login/', (route) => false);
+                      context.read<AuthBloc>().add(const AuthEventLogOut());
                     } on UserNotLoggedInAuthException
                     {
                        await showErrorDialog(context, 'User not logged in');

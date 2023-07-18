@@ -32,7 +32,8 @@ class MyApp extends StatelessWidget {
       ),
       home:  BlocProvider<AuthBloc>(
           create: (context)=> AuthBloc(FirebaseAuthProvider()),
-          child: const Homepage()),
+          child: const Homepage()
+      ),
 
       routes: {
         loginRoute : (context) => const LoginView(),
@@ -49,7 +50,7 @@ class Homepage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    context.read<AuthBloc>().add(const AuthEventInitialize());
+    context.read<AuthBloc>().add(const AuthEventInitialize());                //we are adding this event at the beginning
     return BlocBuilder<AuthBloc , AuthState>(builder: (context , state) {
       if(state is AuthStateLoggedIn){
         return NotesView();
