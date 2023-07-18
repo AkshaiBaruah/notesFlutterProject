@@ -16,7 +16,3 @@ class AuthEventLogIn extends AuthEvent{
 class AuthEventLogOut extends AuthEvent{
   const AuthEventLogOut();
 }
-
-class AuthEventaddedindevbranch{
-
-}
